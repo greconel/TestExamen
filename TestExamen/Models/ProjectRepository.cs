@@ -25,7 +25,9 @@ namespace TestExamen.Models
 
         public async Task<Project?> GetProjectAsync(int id)
         {
-           return await _context.Projects.FindAsync(id);
+            return await _context.Projects
+                .Include(p => p.Student)
+                .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
 
         public async Task<List<Project>> GetProjectsAsync()
