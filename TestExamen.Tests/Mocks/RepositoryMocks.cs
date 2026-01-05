@@ -1,41 +1,45 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TestExamen.Models;
+using Moq;
 
-namespace TestExamen.Models
+namespace TestExamen.Tests.Mocks
 {
-    public class ProjectContext : DbContext
+    public class RepositoryMocks
     {
-        public ProjectContext(DbContextOptions<ProjectContext> options)
-            : base(options)
+        public static Mock<IProjectRepository> GetMockProjectRepository()
         {
+            var projects = GetProjects();
 
+            var mockProjectRepository = new Mock<IProjectRepository>();
+
+            mockProjectRepository.Setup(repo => repo.GetProjectsAsync()).ReturnsAsync(projects);
+            mockProjectRepository.Setup(repo => repo.GetProjectAsync(It.IsAny<int>())).ReturnsAsync((int id) => projects.FirstOrDefault(p => p.ProjectId ==id));
+
+
+            return mockProjectRepository;
         }
 
-        public DbSet<Project> Projects { get; set; } = null!;
-        public DbSet<Student> Students { get; set; } = null!;
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        public static Mock<IStudentRepository> GetMockStudentRepository()
         {
-            base.OnModelCreating(modelBuilder);
+            var students = GetStudents();
+            var mockStudentRepository = new Mock<IStudentRepository>();
 
-            modelBuilder.Entity<Student>().HasData(
-                new Student
-                {
-                    StudentId = 1,
-                    StudentName = "Van Damme, Lisa"
-                },
-                new Student
-                {
-                    StudentId = 2,
-                    StudentName = "Janssens, Thomas"
-                },
-                new Student
-                {
-                    StudentId = 3,
-                    StudentName = "Peeters, Emma"
-                }
-                
-            );
-            modelBuilder.Entity<Project>().HasData(
+            mockStudentRepository.Setup(m => m.GetStudentsAsync()).ReturnsAsync(students);
+            mockStudentRepository.Setup(m => m.GetStudentByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((int id) => students.FirstOrDefault(s => s.StudentId == id));
+
+            return mockStudentRepository;
+        }
+
+        private static List<Project> GetProjects()
+        {
+            var students = GetStudents();
+            return new List<Project>
+            {
                 new Project
                 {
                     ProjectId = 1,
@@ -86,10 +90,20 @@ namespace TestExamen.Models
                     PresentationScore = 4.8m,
                     TotalGrade = 41.3m
                 }
+            };
+        }
 
+        
 
+        private static  List<Student> GetStudents()
+        {
+            return new List<Student>
+            {
+                new Student { StudentId = 1, StudentName = "Van Damme, Lisa" },
+                new Student { StudentId = 2, StudentName = "Janssens, Thomas" },
+                new Student { StudentId = 3, StudentName = "Peeters, Emma" }
+            };
 
-            );
         }
     }
 }
